@@ -1,43 +1,49 @@
-        ;; Just run and do nothing.
+        ;; A basic hello world written in the boot sector.
         ;;
-        ;; Tells the CPU not to execute interrupts and then tells the
-        ;; CPU to waith for an interrupt thus effectively stalling the
-        ;; program.
+        ;; Modified slightly to output two hello worlds.
 
-        org     0x7c00          ; We are loaded by BIOS at 0x7C00.
-                                ; This is important as changing it or
-                                ; leaving it out starts loading at 0x0
-                                ; which impacts the locations in the
-                                ; rest of the program.
+        org 0x7c00
 
-        bits    16              ; We are still in 16 bit Real Mode.
-                                ; This line is a NASM directive to
-                                ; assemble in 16 bits and not 32. NASM
-                                ; defaults to 16 bits so it isn't
-                                ; neccessary to manually specify it
-                                ; here.
+        xor ax, ax              ; Set ax to 0
+        mov ds, ax              ; set data segment to 0
 
-Start:
+        mov si, msg             ; Set string index pointer to the
+                                ; start of the message.
 
-        cli                     ; Clear all Interrupts. Set the
-                                ; interrupt flag to 0. Essentially
-                                ; just delays all interrupts until a
-                                ; later time.
+print_loop:
+        lodsb                   ; Load string.
+        or al, al               ; zero = end of string
+        jz print_loop2          ; Jump to next print when result of
+                                ; previous instruction is equal to 0,
+                                ; which is the end of the string.
+        mov ah, 0x0E
+        int 0x10                ; Output interrupt.
+        jmp print_loop
 
-        hlt                     ; Halt the system. Stops execution
-                                ; until the next hardware interrupt.
-                                ; Basically puts the cpu to sleep
-                                ; until it has something to do.
 
-        times 510 - ($-$$) db 0 ; We have to be 512 bytes. Clear the
-                                ; rest of the bytes with 0. Times
-                                ; causes the instruction to be
-                                ; assembled multiple times. This
-                                ; basically just fills the rest of the
-                                ; image with 0.
 
-        dw	 0xAA55             ; Boot Signature.
-                                ; Old versions of bioses looked for
-                                ; this in order to find a boot sector.
-                                ; dw 0xAA55 is equivalent to db 0x55
-                                ; db 0xAA.
+	    xor ax, ax
+        mov ds, ax
+
+        mov si, msg2
+
+print_loop2:
+        lodsb
+        or al, al
+        jz hang                 ; Jump to hang when result of previous
+                                ; instruction is equal to 0.
+        mov ah, 0x0E
+        int 0x10
+        jmp print_loop
+
+
+hang:
+        jmp hang
+
+
+msg:    db 'Hello world.', 13, 10, 0
+msg2:   db 'Hello world2.', 13, 10, 0
+
+        times 510 - ($-$$) db 0
+
+        dw	 0xAA55
