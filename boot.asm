@@ -1,7 +1,8 @@
-        ;; *********************************************
-        ;;  Boot1.asm
-        ;;      - A Simple Bootloader
-        ;; *********************************************
+        ;; Just run and do nothing.
+        ;;
+        ;; Tells the CPU not to execute interrupts and then tells the
+        ;; CPU to waith for an interrupt thus effectively stalling the
+        ;; program.
 
         org     0x7c00          ; We are loaded by BIOS at 0x7C00.
                                 ; This is important as changing it or
