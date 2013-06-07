@@ -1,4 +1,4 @@
 hintz-os
 ========
 
-A basic OS from scrath
+A basic OS from scratch.
