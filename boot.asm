@@ -4,7 +4,10 @@
 
         org 0x7c00
 
-        xor ax, ax              ; Set ax to 0
+        xor ax, ax              ; Set ax to 0. asdf asd fasdf asdf asd
+                                ; xor is fewer bytes than move and
+                                ; doesn't require an immediate value
+                                ; to be loaded from memory.
         mov ds, ax              ; set data segment to 0
 
         mov si, msg             ; Set string index pointer to the
