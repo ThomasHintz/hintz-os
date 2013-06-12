@@ -1,35 +1,49 @@
-        ;; A basic hello world written in the boot sector.
-        ;;
-        ;; Modified slightly to output two hello worlds.
+        cpu 8086
 
-        org 0x7c00
+        %define GeometryTableSize (GeometryTableEndLoc - GeometryTableLoc)
 
-        xor ax, ax              ; Set ax to 0. asdf asd fasdf asdf asd
-                                ; xor is fewer bytes than move and
-                                ; doesn't require an immediate value
-                                ; to be loaded from memory.
-        mov ds, ax              ; set data segment to 0
+boottop:                        ; Label used for measuring size of the
+                                ; boot sector that is used by the code
+                                ; which is needed to pad out the end
+                                ; of the boot sector and add the
+                                ; 0x55AA at the end.
+        jmp bootstart
+        nop
 
-        mov si, msg             ; Set string index pointer to the
-                                ; start of the message.
+        ;; These values must match the formatting of the floppy disk.
 
-print_loop:
-        lodsb                   ; Load string.
-        or al, al               ; zero = end of string
-        jz hang                 ; Jump to next print when result of
-                                ; previous instruction is equal to 0,
-                                ; which is the end of the string.
-        mov ah, 0x0E
-        int 0x10                ; Output interrupt.
-        jmp print_loop
+        GeometryTableLoc equ $
 
+        OEMName db "hintz0.1"
+        BytesPerSect dw 512
+        SectPerClust db 4
+        RsvdSectCnt dw 1
+        FATCnt db 2
+        MaxFiles dw 224
+        NumFilesysSect dw 2880
+        MediaType db 0xF0       ; removable disk
+        FATSize dw 9            ; in sectors
+        SectPerTrack dw 18
+        NumHeads dw 2
+        SectsBeforePart dd 0    ; number of sectors before the start
+                                ; partition.
+        ExtNumFilesysSect dd 0  ; 0 because NumFilesysSect is not 0.
+        DrvNum db 0
+        Unused0 db 0
+        ExtBootSig db 29
+        VolID dd 0x12345678     ; arbitrary in this case.
+        VolLabel db "VOLUMELABEL"
+        FilesysTypeLabel db "FAT12   "
 
-hang:
-        jmp hang
+        GeometryTableEndLoc equ $
 
+        ;; Make sure our table above is the right size.
+        %if GeometryTableSize <> 59
+        %error "Geometry table as defined in this code has the wrong length."
+        %endif
 
-msg:    db 'Hello world.', 13, 10, 0
+bootstart:
 
-        times 510 - ($-$$) db 0
-
-        dw	 0xAA55
+	    times 509 - $ + boottop db 0 ; Space out to offset 508
+	    db GeometryTableSize         ; Bytes in geometry table
+        db 0x55, 0xaa
