@@ -42,7 +42,21 @@ boottop:                        ; Label used for measuring size of the
         %error "Geometry table as defined in this code has the wrong length."
         %endif
 
+        ;; char should be in register al
+printc:
+        mov ah, 0x0E
+        int 0x10
+        ret
+
+hang:
+        jmp hang
+
 bootstart:
+
+        mov al, "e"
+        call printc
+
+        jmp hang
 
 	    times 509 - $ + boottop db 0 ; Space out to offset 508
 	    db GeometryTableSize         ; Bytes in geometry table
