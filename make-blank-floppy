@@ -1,2 +1,0 @@
-#!/bin/bash
-mkfs.vfat -C "floppy.img" 1440

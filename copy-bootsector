@@ -1,2 +1,0 @@
-#!/bin/bash
-dd if=a.img of=floppy.img bs=512 conv=notrunc
