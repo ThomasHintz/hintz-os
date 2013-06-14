@@ -16,7 +16,7 @@ boottop:                        ; Label used for measuring size of the
 
         OEMName db "hintz0.1"
         BytesPerSect dw 512
-        SectPerClust db 4
+        SectPerClust db 1
         RsvdSectCnt dw 1
         FATCnt db 2
         MaxFiles dw 224
@@ -31,8 +31,8 @@ boottop:                        ; Label used for measuring size of the
         DrvNum db 0
         Unused0 db 0
         ExtBootSig db 29
-        VolID dd 0x12345678     ; arbitrary in this case.
-        VolLabel db "VOLUMELABEL"
+        VolID dd 0x517a0297
+        VolLabel db "           "
         FilesysTypeLabel db "FAT12   "
 
         GeometryTableEndLoc equ $
