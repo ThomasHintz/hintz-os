@@ -1,6 +1,7 @@
         cpu 8086
 
         %define GeometryTableSize (GeometryTableEndLoc - GeometryTableLoc)
+        %define MAXFATSECS 40   ; max sectors allowed in fat
 
 boottop:                        ; Label used for measuring size of the
                                 ; boot sector that is used by the code
@@ -51,11 +52,11 @@ printc:
 hang:
         jmp hang
 
-;; AH = 02h
+;; AH = 02h : the interrupt code for reading from disk
 ;; AL = number of sectors to read (must be nonzero)
 ;; CH = low eight bits of cylinder number
 ;; CL = sector number 1-63 (bits 0-5)
-;; high two bits of cylinder (bits 6-7, hard disk only)
+;;   high two bits of cylinder (bits 6-7, hard disk only)
 ;; DH = head number
 ;; DL = drive number (bit 7 set for hard disk)
 ;; ES:BX -> data buffer
@@ -69,22 +70,55 @@ getsector:
         mov ax, [RawSecNum]
         mov dl, [DrvNum]        ; set drive number
 
+        mov ax, [RawSecNum]     ; fetch 0-based sector number
+        div byte [SecsPerCyl]   ; split into two parts
+        mov ch, al              ; save the cylinder number
+
+        mov al, ah              ; copy sector within the cyl
+        xor ah, ah              ; make it 16-bit
+        div byte [SectPerTrack] ; split this into two
+        mov dh, al              ; save track or head number
+        mov cl, ah              ; form 1-based
+        inc cl                  ; sector number
+
         mov ax, 0x0201          ; command to read 1 sector
         int 0x13                ; read sector
 
+        mov al, "g"
+        call printc
+
+        ret
+
 findkernel:
 
-        ;; need to get the start of the root sector
         mov al, "f"             ; find kernel
         call printc
 
+        mov ax, [RootDirSectorStart]
+        mov [RawSecNum], ax
         call getsector
 
         ret
 
 bootstart:
 
+        ;; setup data segment
+        mov ax, 0x07c0          ; point at start of this code
+        mov ds, ax              ; set ds
+        mov es, ax              ; set es
+
+        ;; setup the stack
+        xor ax, ax              ; clear ax
+        mov ss, ax              ; set ss and pause interrupts
+        mov sp, ax              ; stack at top of base 64k
+
+        mov [DrvNum], dl        ; save boot drive
+
         cld
+
+        mov byte al, [SectPerClust] ; secs/cluster in AX
+        mul word [BytesPerSect]     ; form bytes per cluster
+        mov [BytesPerClust], ax
 
         mov al, "s"             ; start the process
         call printc
@@ -106,3 +140,4 @@ section .bss
         RootDirNumSectors resw 1  ; Sectors in root dir.
         RawSecNum resw 1
         SecsPerCyl resw 1
+        BytesPerClust resw 1
